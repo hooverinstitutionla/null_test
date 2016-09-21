@@ -1,7 +1,6 @@
 # !/usr/bin/env python
 #
 # Script: null.py
-# Author: Jim Sam
 #
 # This Python 3.4 script performs a null test between similarly named WAV files
 # in different directories. Following, it produces a report if the two files
@@ -9,11 +8,11 @@
 #
 
 import datetime
-import linecache
 import platform
 import re
 import os
 import subprocess
+import sys
 
 class AFile:
     def open_file(self, f):
@@ -69,7 +68,7 @@ def null_test(path1, path2, f, terminal):
     channels = check_channels(f, path1)
     print("Working on %s now." % f)
 
-    # Create 16-bit files
+    # Create 16-bit WAV files
     sixteen_a = sixteen_bit(path1, f, terminal)
     sixteen_b = sixteen_bit(path2, f, terminal)
 
@@ -108,7 +107,10 @@ def make_file_list(path1, path2):
     audio_extentions = ['wav', 'flac', 'mp3']
 
     for f in d1:
-        file_name=f.split('.')
+        if not os.path.isfile(os.path.join(path1,f)):
+            continue
+
+        file_name = f.split('.')
         if file_name[1] not in audio_extentions:
             continue
 
@@ -128,13 +130,15 @@ def validate_path(path):
     else:
         result = False
 
+    # TO DO: Check for write permissions
+
     return result
 
 def get_paths():
     toggle = False
     while toggle==False:
-        path1 = input("Where is the master directory? ")
-        path2 = input("Where is the second directory? ")
+        path1 = input("Where is the master directory? (Please include a trailing slash or backslash)\n")
+        path2 = input("Where is the second directory? (Please include a trailing slash or backslash)\n")
         a = validate_path(path1)
         b = validate_path(path2)
         if a and b:
@@ -150,7 +154,11 @@ def main():
     file_list, not_in_both = make_file_list(path1, path2)
 
     terminal = AFile()
-    terminal.open_file(path1+str(datetime.date.today())+'_terminal_output.txt')
+
+    try:
+        terminal.open_file(path1+str(datetime.date.today())+'_terminal_output.txt')
+    except:
+        sys.exit('There\'s a permissions problem. Please try this program again. Plase make sure you can write to the folders in question.')
 
     same = []
     different = []
@@ -162,7 +170,8 @@ def main():
         else:
             different = different + [f]
 
-    with open(path1+'results.txt', 'w') as results:
+    results_file = path1+str(datetime.date.today())+'_results.txt'
+    with open(results_file, 'w') as results:
         # Write what did null
         results.write("These files are the same:\r\n")
         for f in same:
@@ -185,11 +194,11 @@ def main():
     # http://stackoverflow.com/questions/6631299/python-opening-a-folder-in-explorer-nautilus-mac-thingie
     # Creative Commons license outlined at http://blog.stackoverflow.com/2009/06/attribution-required/
     if platform.system() == "Windows":
-        os.startfile(path1+'results.txt')
+        os.startfile(results_file)
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", path1+'results.txt'])
+        subprocess.Popen(["open", results_file])
     else:
-        subprocess.Popen(["xdg-open", path1+'results.txt'])
+        subprocess.Popen(["xdg-open", results_file])
 
 
 if __name__ == '__main__':
