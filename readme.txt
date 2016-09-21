@@ -1,0 +1,1 @@
+This Python 3.4 script performs a null test between similarly named audio files in different directories. Following, it produces a report if the two files null, that is, if they're the same audio.
