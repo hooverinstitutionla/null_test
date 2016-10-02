@@ -136,7 +136,7 @@ def validate_path(path):
 
 def get_paths():
     toggle = False
-    while toggle==False:
+    while toggle is False:
         path1 = input("Where is the master directory? (Please include a trailing slash or backslash)\n")
         path2 = input("Where is the second directory? (Please include a trailing slash or backslash)\n")
         a = validate_path(path1)
