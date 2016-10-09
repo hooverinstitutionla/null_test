@@ -32,7 +32,7 @@ def run_command(command, terminal):
         terminal.write_to_file(message+"\r\n")
     return message
 
-def getLoud(file, path):
+def get_loud(file, path):
     command = ['ffmpeg','-i', path+file, '-af', 'volumedetect', '-f', 'null', 'NUL']
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 
@@ -87,7 +87,7 @@ def null_test(path1, path2, f, terminal):
     output = run_command(mix_command, terminal)
 
     # toggle does_null based on volume of mixed file.
-    peak = getLoud(mixed, path2)
+    peak = get_loud(mixed, path2)
     if peak == '-91.0 dB' or peak == '.0 dB':
         does_null = True
 
