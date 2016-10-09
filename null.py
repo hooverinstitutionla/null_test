@@ -123,6 +123,10 @@ def make_file_list(path1, path2):
     return file_list, not_in_both
 
 def validate_path(path):
+    # Guard against just the directory
+    if re.match(r'^\w:$', path):
+        path = path + '\\'
+
     re_result = re.match(r'^(\w:\\$)|(\w:\\).*\\$|^(/.*/)$', path)
     os_result = os.path.exists(path)
     if re_result and os_result:
