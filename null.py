@@ -32,8 +32,8 @@ def run_command(command, terminal):
         terminal.write_to_file(message+"\r\n")
     return message
 
-def get_loud(file, path):
-    command = ['ffmpeg','-i', path+file, '-af', 'volumedetect', '-f', 'null', 'NUL']
+def get_loud(f, path):
+    command = ['ffmpeg','-i', os.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 
     for line in yo.stdout:
@@ -44,8 +44,8 @@ def get_loud(file, path):
     volume = volume.rstrip()
     return volume
 
-def check_channels(file, path):
-    command = ['ffmpeg','-i', path+file, '-af', 'volumedetect', '-f', 'null', 'NUL']
+def check_channels(f, path):
+    command = ['ffmpeg','-i', os.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 
     for line in yo.stdout:
@@ -59,7 +59,7 @@ def check_channels(file, path):
 
 def sixteen_bit(path, f, terminal):
     sixteen = f.split('.')[0]+"_16bit.wav"
-    command = ['ffmpeg','-i',path+f, '-dither_method','modified_e_weighted', path+sixteen]
+    command = ['ffmpeg','-i',os.join(path, f), '-dither_method','modified_e_weighted', os.join(path, sixteen)]
     output = run_command(command, terminal)
     return sixteen
 
@@ -75,14 +75,14 @@ def null_test(path1, path2, f, terminal):
     # Invert file in path2
     inverted = sixteen_b.split('.')[0]+"_i.wav"
     if channels == 1:
-        inv_command = ['ffmpeg','-i', path2+sixteen_b, '-af', 'aeval=-val(0)', path2+inverted]
+        inv_command = ['ffmpeg','-i', os.path.join(path2, sixteen_b), '-af', 'aeval=-val(0)', os.path.join(path2, inverted)]
     else:
-        inv_command = ['ffmpeg','-i', path2+sixteen_b, '-af', 'aeval=-val(0)|-val(1)', path2+inverted]
+        inv_command = ['ffmpeg','-i', os.path.join(path2, sixteen_b), '-af', 'aeval=-val(0)|-val(1)', os.path.join(path2, inverted)]
     output = run_command(inv_command, terminal)
 
     # Mix files together
     mixed = f.split('.')[0]+"-mix.wav"
-    mix_command = ['ffmpeg','-i',path1+sixteen_a,'-i',path2+inverted,'-filter_complex','amix',path2+mixed]
+    mix_command = ['ffmpeg','-i',os.path.join(path1, sixteen_a),'-i', os.path.join(path2, inverted),'-filter_complex','amix', os.path.join(path2, mixed)]
 
     output = run_command(mix_command, terminal)
 
@@ -92,10 +92,10 @@ def null_test(path1, path2, f, terminal):
         does_null = True
 
     # Remove the inverted and mixed files
-    os.remove(path1+sixteen_a)
-    os.remove(path2+sixteen_b)
-    os.remove(path2+inverted)
-    os.remove(path2+mixed)
+    os.remove(os.path.join(path1, sixteen_a))
+    os.remove(os.path.join(path2, sixteen_b))
+    os.remove(os.path.join(path2, inverted))
+    os.remove(os.path.join(path2, mixed))
 
     return does_null
 
@@ -107,7 +107,7 @@ def make_file_list(path1, path2):
     audio_extentions = ['wav', 'flac', 'mp3']
 
     for f in d1:
-        if not os.path.isfile(os.path.join(path1,f)):
+        if not os.path.isfile(os.path.join(path1, f)):
             continue
 
         file_name = f.split('.')
@@ -160,7 +160,7 @@ def main():
     terminal = AFile()
 
     try:
-        terminal.open_file(path1+str(datetime.date.today())+'_terminal_output.txt')
+        terminal.open_file(os.path.join(path1, str(datetime.date.today()), '_terminal_output.txt'))
     except:
         sys.exit('There\'s a permissions problem. Please try this program again. Plase make sure you can write to the folders in question.')
 
@@ -174,7 +174,7 @@ def main():
         else:
             different = different + [f]
 
-    results_file = path1+str(datetime.date.today())+'_results.txt'
+    results_file = os.path.join(path1, str(datetime.date.today()), '_results.txt')
     with open(results_file, 'w') as results:
         # Write what did null
         results.write("These files are the same:\r\n")
