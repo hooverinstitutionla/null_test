@@ -183,7 +183,7 @@ def main():
 
         # Write what did not null
         if len(different) < 1:
-            results.write("No files were found to be different.\r\n")
+            results.write("\r\nNo files were found to be different.\r\n")
         else:
             results.write("\r\nThese files are different:\r\n")
             for f in different:
