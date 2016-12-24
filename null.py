@@ -33,7 +33,7 @@ def run_command(command, terminal):
     return message
 
 def get_loud(f, path):
-    command = ['ffmpeg','-i', os.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
+    command = ['ffmpeg','-i', os.path.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 
     for line in yo.stdout:
@@ -45,7 +45,7 @@ def get_loud(f, path):
     return volume
 
 def check_channels(f, path):
-    command = ['ffmpeg','-i', os.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
+    command = ['ffmpeg','-i', os.path.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 
     for line in yo.stdout:
@@ -59,7 +59,7 @@ def check_channels(f, path):
 
 def sixteen_bit(path, f, terminal):
     sixteen = f.split('.')[0]+"_16bit.wav"
-    command = ['ffmpeg','-i',os.join(path, f), '-dither_method','modified_e_weighted', os.join(path, sixteen)]
+    command = ['ffmpeg','-i',os.path.join(path, f), '-dither_method','modified_e_weighted', os.path.join(path, sixteen)]
     output = run_command(command, terminal)
     return sixteen
 
@@ -160,7 +160,7 @@ def main():
     terminal = AFile()
 
     try:
-        terminal.open_file(os.path.join(path1, str(datetime.date.today()), '_terminal_output.txt'))
+        terminal.open_file(os.path.join(path1, str(datetime.date.today())+'_terminal_output.txt'))
     except:
         sys.exit('There\'s a permissions problem. Please try this program again. Plase make sure you can write to the folders in question.')
 
@@ -170,11 +170,11 @@ def main():
     for f in file_list:
         does_null = null_test(path1, path2, f, terminal)
         if does_null:
-            same = same + [f]
+            same.append(f)
         else:
-            different = different + [f]
+            different.append(f)
 
-    results_file = os.path.join(path1, str(datetime.date.today()), '_results.txt')
+    results_file = os.path.join(path1, str(datetime.date.today())+'_results.txt')
     with open(results_file, 'w') as results:
         # Write what did null
         results.write("These files are the same:\r\n")
