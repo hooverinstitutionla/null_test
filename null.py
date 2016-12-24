@@ -129,12 +129,12 @@ def validate_path(path):
 
     re_result = re.match(r'^(\w:\\$)|(\w:\\).*\\$|^(/.*/)$', path)
     os_result = os.path.exists(path)
-    if re_result and os_result:
+    permissions = os.access(path, os.W_OK)
+
+    if re_result and os_result and permissions:
         result = True
     else:
         result = False
-
-    # TO DO: Check for write permissions
 
     return result
 
@@ -149,7 +149,7 @@ def get_paths():
             toggle=True
             print()
         else:
-            print('\nAt least one of those paths was invalid. Please try again.\n')
+            print('\r\nAt least one of those paths was invalid. Please try again.\r\n\r\n')
 
     return path1, path2
 
