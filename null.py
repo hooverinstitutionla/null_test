@@ -182,9 +182,12 @@ def main():
             results.write(f+"\r\n")
 
         # Write what did not null
-        results.write("\r\nThese files are different:\r\n")
-        for f in different:
-            results.write(f+"\r\n")
+        if len(different) < 1:
+            results.write("\r\nNo files were found to be different.\r\n")
+        else:
+            results.write("\r\nThese files are different:\r\n")
+            for f in different:
+                results.write(f+"\r\n")
 
         # Write into results what files were ignored
         results.write("\r\nThe following files were ignored because they were not in the second directory.\r\n")
