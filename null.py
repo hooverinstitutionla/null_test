@@ -1,18 +1,15 @@
-# !/usr/bin/env python
-#
-# Script: null.py
-#
-# This Python 3.4 script performs a null test between similarly named WAV files
-# in different directories. Following, it produces a report if the two files
-# null, that is, if they're the same audio.
-#
+'''This Python 3.4 script performs a null test between similarly named WAV files
+in different directories. Following, it produces a report if the two files
+null, that is, if they're the same audio.'''
 
 import datetime
 import platform
 import re
 import os
 import subprocess
+import wave
 import sys
+
 
 class AFile:
     def open_file(self, f):
@@ -27,6 +24,7 @@ class AFile:
 def run_command(command, terminal):
     output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     message = output.stdout.read()
+    output.stdout.close()
     terminal.write_to_file("\r\nCommand " + str(command) + "\r\n")
     if len(message) > 1:
         terminal.write_to_file(message+"\r\n")
@@ -44,17 +42,11 @@ def get_loud(f, path):
     volume = volume.rstrip()
     return volume
 
-def check_channels(f, path):
-    command = ['ffmpeg','-i', os.path.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
-    yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
-
-    for line in yo.stdout:
-        if 'mono' in line:
-            channels = 1
-
-        if 'stereo' in line:
-            channels = 2
-
+def check_channels(f, hi_res_path):
+    full_file = os.path.join(hi_res_path, f)
+    wav = wave.open(full_file, 'rb')
+    channels = wav.getnchannels()
+    wav.close()
     return channels
 
 def sixteen_bit(path, f, terminal):
