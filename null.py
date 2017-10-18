@@ -24,7 +24,7 @@ class AFile:
 def run_command(command, terminal):
     output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     message = output.stdout.read()
-    output.stdout.close()
+    output.TerminateProcess()
     terminal.write_to_file("\r\nCommand " + str(command) + "\r\n")
     if len(message) > 1:
         terminal.write_to_file(message+"\r\n")
