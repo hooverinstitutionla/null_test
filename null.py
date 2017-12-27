@@ -121,11 +121,10 @@ def validate_path(path):
     if re.match(r'^\w:$', path):
         path = path + '\\'
 
-    re_result = re.match(r'^(\w:\\$)|(\w:\\).*\\$|^(/.*/)$', path)
     os_result = os.path.exists(path)
     permissions = os.access(path, os.W_OK)
 
-    if re_result and os_result and permissions:
+    if os_result and permissions:
         result = True
     else:
         result = False
@@ -135,8 +134,8 @@ def validate_path(path):
 def get_paths():
     toggle = False
     while toggle is False:
-        path1 = input("Where is the master directory? (Please include a trailing slash or backslash)\n")
-        path2 = input("Where is the second directory? (Please include a trailing slash or backslash)\n")
+        path1 = input("Where is the master directory?\n")
+        path2 = input("Where is the second directory?\n")
         a = validate_path(path1)
         b = validate_path(path2)
         if a and b:
