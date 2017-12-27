@@ -1,30 +1,25 @@
 import os
 from unittest import main, TestCase
 
-from null import AFile, check_channels, run_command, sixteen_bit
+from null import check_channels, run_command, sixteen_bit
 
 class UnitTests(TestCase):
     valid_mono = 'valid_mono.wav'
     valid_stereo = 'valid_stereo.wav'
 
     def setUp(self):
-        self.terminal = AFile()
-        self.terminal.open_file('test.txt')
-
         command = ['ffmpeg','-f','lavfi','-i',
             'sine=frequency=1000:duration=5',self.valid_mono]
-        run_command(command, self.terminal)
+        run_command(command, '')
 
         command = ['ffmpeg', '-f', 'lavfi', '-i',
             'sine=frequency=1000:duration=5', '-c:a', 'pcm_s16le',
             '-f', 'lavfi', '-i', 'sine=frequency=1000:duration=5', '-c:a', 'pcm_s16le',
             '-filter_complex', '[0]apad[a];[a][1]amerge[aout]', '-map',
             '[aout]', self.valid_stereo]
-        run_command(command, self.terminal)
+        run_command(command, '')
 
     def tearDown(self):
-        self.terminal.close_file()
-        os.remove('test.txt')
         os.remove(self.valid_mono)
         os.remove(self.valid_stereo)
 
@@ -38,7 +33,7 @@ class UnitTests(TestCase):
     def test_sixteen_bit_function(self):
         # TODO: write up some mocks for the ffmpeg subprocess.
         test_file = 'test_01.wav'
-        sb = sixteen_bit('/', test_file, self.terminal)
+        sb = sixteen_bit('/', test_file)
         self.assertEqual(sb, 'test_01_16bit.wav')
 
 main()

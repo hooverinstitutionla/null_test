@@ -100,14 +100,12 @@ def make_file_list(path1, path2):
     file_list = []
     not_in_both = []
 
-    audio_extentions = ['wav', 'flac', 'mp3']
-
     for f in d1:
         if not os.path.isfile(os.path.join(path1, f)):
             continue
 
         file_name = f.split('.')
-        if file_name[1] not in audio_extentions:
+        if file_name[1] != 'wav':
             continue
 
         f2 = os.path.join(path2, f)
