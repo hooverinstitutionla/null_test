@@ -1,38 +1,37 @@
-'''This Python 3.4 script performs a null test between similarly named WAV files
+'''
+This Python 3 script performs a null test between similarly named WAV files
 in different directories. Following, it produces a report if the two files
-null, that is, if they're the same audio.'''
+are the same audio.
+'''
 
 import datetime
+import logging
+import os
 import platform
 import re
-import os
 import subprocess
-import wave
 import sys
+import wave
 
 
-class AFile:
-    def open_file(self, f):
-        self.open_file = open(f, 'a', encoding='utf-8')
-    def write_to_file(self, term):
-        self.open_file.write(term)
-    def close_file(self):
-        self.open_file.close()
-    count = 0
-
-
-def run_command(command, terminal):
+def run_command(command, operation):
     output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     message = output.stdout.read()
-    output.TerminateProcess()
-    terminal.write_to_file("\r\nCommand " + str(command) + "\r\n")
+    output.kill()
+
+    logging.info(operation)
+    logging.info("\r\nCommand " + str(command) + "\r\n")
     if len(message) > 1:
-        terminal.write_to_file(message+"\r\n")
+        logging.info(message+"\r\n")
     return message
 
 def get_loud(f, path):
     command = ['ffmpeg','-i', os.path.join(path, f), '-af', 'volumedetect', '-f', 'null', 'NUL']
+    operation = 'Getting the maximum volume of %s now.' % f
     yo = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
+
+    logging.info(operation)
+    logging.info("\r\nCommand " + str(command) + "\r\n")
 
     for line in yo.stdout:
         if 'max_volume' in line:
@@ -40,6 +39,7 @@ def get_loud(f, path):
             volume = line[line.find(':')+2:]
 
     volume = volume.rstrip()
+    logging.info('The maximum volume of %s is: %s' % (f, volume))
     return volume
 
 def check_channels(f, hi_res_path):
@@ -47,22 +47,24 @@ def check_channels(f, hi_res_path):
     wav = wave.open(full_file, 'rb')
     channels = wav.getnchannels()
     wav.close()
+    logging.info('%s has %s channels.', full_file, channels)
     return channels
 
-def sixteen_bit(path, f, terminal):
+def sixteen_bit(path, f):
     sixteen = f.split('.')[0]+"_16bit.wav"
     command = ['ffmpeg','-i',os.path.join(path, f), '-dither_method','modified_e_weighted', os.path.join(path, sixteen)]
-    output = run_command(command, terminal)
+    operation = 'Making the 16-bit version of %s now.' % f
+    output = run_command(command, operation)
     return sixteen
 
-def null_test(path1, path2, f, terminal):
+def null_test(path1, path2, f):
     does_null = False
     channels = check_channels(f, path1)
     print("Working on %s now." % f)
 
     # Create 16-bit WAV files
-    sixteen_a = sixteen_bit(path1, f, terminal)
-    sixteen_b = sixteen_bit(path2, f, terminal)
+    sixteen_a = sixteen_bit(path1, f)
+    sixteen_b = sixteen_bit(path2, f)
 
     # Invert file in path2
     inverted = sixteen_b.split('.')[0]+"_i.wav"
@@ -70,13 +72,15 @@ def null_test(path1, path2, f, terminal):
         inv_command = ['ffmpeg','-i', os.path.join(path2, sixteen_b), '-af', 'aeval=-val(0)', os.path.join(path2, inverted)]
     else:
         inv_command = ['ffmpeg','-i', os.path.join(path2, sixteen_b), '-af', 'aeval=-val(0)|-val(1)', os.path.join(path2, inverted)]
-    output = run_command(inv_command, terminal)
+    operation = 'Making the inverted version of %s now.' % f
+    output = run_command(inv_command, operation)
 
     # Mix files together
     mixed = f.split('.')[0]+"-mix.wav"
     mix_command = ['ffmpeg','-i',os.path.join(path1, sixteen_a),'-i', os.path.join(path2, inverted),'-filter_complex','amix', os.path.join(path2, mixed)]
 
-    output = run_command(mix_command, terminal)
+    operation = 'Making the mixed version of %s now.' % f
+    output = run_command(mix_command, operation)
 
     # toggle does_null based on volume of mixed file.
     peak = get_loud(mixed, path2)
@@ -149,29 +153,34 @@ def main():
     path1, path2 = get_paths()
     file_list, not_in_both = make_file_list(path1, path2)
 
-    terminal = AFile()
-
     try:
-        terminal.open_file(os.path.join(path1, str(datetime.date.today())+'_terminal_output.txt'))
+        filename = os.path.join(path1, str(datetime.date.today())+'_null_test.log')
+        logging.basicConfig(filename=filename, level=logging.DEBUG)
     except:
         sys.exit('There\'s a permissions problem. Please try this program again. Plase make sure you can write to the folders in question.')
 
     same = []
     different = []
 
+    # Compare the files.
     for f in file_list:
-        does_null = null_test(path1, path2, f, terminal)
+        does_null = null_test(path1, path2, f)
         if does_null:
             same.append(f)
         else:
             different.append(f)
 
+    # Write the results of the tests
     results_file = os.path.join(path1, str(datetime.date.today())+'_results.txt')
     with open(results_file, 'w') as results:
+
         # Write what did null
-        results.write("These files are the same:\r\n")
-        for f in same:
-            results.write(f+"\r\n")
+        if len(same) < 1:
+            results.write("\r\nNo files were found to be the same.\r\n")
+        else:
+            results.write("These files are the same:\r\n")
+            for f in same:
+                results.write(f+"\r\n")
 
         # Write what did not null
         if len(different) < 1:
@@ -182,11 +191,11 @@ def main():
                 results.write(f+"\r\n")
 
         # Write into results what files were ignored
-        results.write("\r\nThe following files were ignored because they were not in the second directory.\r\n")
-        for f in not_in_both:
-            results.write(f+"\r\n")
+        if len(not_in_both) > 0:
+            results.write("\r\nThe following files were ignored because they were not in the second directory.\r\n")
+            for f in not_in_both:
+                results.write(f+"\r\n")
 
-    terminal.close_file()
 
     # Assistance with the following six lines of code was from StackOverlow
     # user Cas - http://stackoverflow.com/users/175584/cas
